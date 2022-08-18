@@ -4,3 +4,5 @@
 *.elf
 *.map
 *.pal
+*.glyph
+otb-convert

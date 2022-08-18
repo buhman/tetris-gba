@@ -18,6 +18,7 @@ typedef struct input {
   count_flop_t l;
   count_flop_t r;
   count_flop_t start;
+  count_flop_t select;
 } input_t;
 
 static inline void
@@ -67,6 +68,7 @@ input(void)
   key_input_count(&_input.l, key_input, KEYCNT__INPUT_L);
   key_input_count(&_input.r, key_input, KEYCNT__INPUT_R);
   key_input_count(&_input.start, key_input, KEYCNT__INPUT_ST);
+  key_input_count(&_input.select, key_input, KEYCNT__INPUT_SL);
 
 #define EVENT_LEFT (key_flopped(&_input.left))
 #define EVENT_RIGHT (key_flopped(&_input.right))
@@ -77,9 +79,17 @@ input(void)
 #define EVENT_ROTATE_CCW (key_flopped(&_input.b))
 
 #define EVENT_START (key_flopped(&_input.start))
+#define EVENT_PAUSE (key_flopped(&_input.select))
 
   if (EVENT_START) {
     tetris_reset_frame();
+  }
+  if (EVENT_PAUSE) {
+    switch (frame.state) {
+    case RUNNING: frame.state = PAUSED; break;
+    case PAUSED: frame.state = RUNNING; break;
+    default: break;
+    }
   }
 
   if (frame.state != RUNNING)

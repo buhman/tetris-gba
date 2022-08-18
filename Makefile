@@ -13,8 +13,12 @@ OBJS += tetris.o
 OBJS += render.o
 OBJS += obj_tet.o
 OBJS += bag.o
+OBJS += glyph.o
+OBJS += osd.o
 OBJS += res/block.data.o
 OBJS += res/block_end.data.o
+OBJS += res/BmPlus_ToshibaSat_8x8.glyph.o
+OBJS += res/Bm437_CompaqThin_8x8.glyph.o
 
 HEADERS = $(wildcard *.h)
 

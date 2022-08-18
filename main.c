@@ -11,6 +11,8 @@
 #include "input.h"
 #include "block.h"
 #include "obj_tet.h"
+#include "glyph.h"
+#include "osd.h"
 
 struct frame frame = { 0 };
 
@@ -27,6 +29,7 @@ void _user_isr(void)
     render_piece();
     render_queue();
     render_swap();
+    osd_render(frame.points, frame.lines.total, frame.level);
   }
 
   io_reg.IF = ireq;
@@ -55,6 +58,12 @@ void _start(void)
   render_static_backgrounds();
   render_init_queue();
 
+  pram.bg[14][1] = PRAM_RGB15(25, 25, 25);
+  pram.bg[15][1] = PRAM_RGB15(31, 31, 31);
+  glyph_init(1, 0, 0);
+
+  osd_labels();
+
   io_reg.DISPCNT =
     ( DISPCNT__BG0
     | DISPCNT__BG1
@@ -68,7 +77,7 @@ void _start(void)
   io_reg.BG0CNT =
     ( BG_CNT__COLOR_16_16
     | BG_CNT__SCREEN_SIZE(0)
-    | BG_CNT__CHARACTER_BASE_BLOCK(0)
+    | BG_CNT__CHARACTER_BASE_BLOCK(1)
     | BG_CNT__SCREEN_BASE_BLOCK(31)
     | BG_CNT__PRIORITY(0)
     );

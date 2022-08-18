@@ -66,6 +66,7 @@ static_assert((sizeof (field)) == (ROWS * COLUMNS));
 typedef enum state {
   PRE_START = 0,
   RUNNING,
+  PAUSED
 } state;
 
 #define BAG_QUEUE_LEN (6)

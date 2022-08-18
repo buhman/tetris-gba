@@ -339,6 +339,7 @@ void tetris_tick(void)
 
 void tetris_swap(void)
 {
+  if (frame.hold.swapped) return;
   frame.hold.swapped = true;
   tet swap = frame.hold.piece;
   frame.hold.piece = frame.piece.tet;
