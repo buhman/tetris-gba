@@ -83,6 +83,7 @@ static inline void clear_field(void)
   fill_32((void*)&(frame.field[0][0]),
           byte_32(TET_EMPTY),
           (sizeof (frame.field)));
+  //frame.field[39][9].color = TET_EMPTY;
 }
 
 static void _next_piece(tet t)
@@ -104,6 +105,21 @@ static tet next_tet(void)
 
 void tetris_reset_frame(void)
 {
+  if ( _save.magic[0] != 'M' || _save.magic[1] != 'A'
+    || _save.magic[2] != 'G' || _save.magic[3] != 'K') {
+    _save.magic[0] = 'M';
+    _save.magic[1] = 'A';
+    _save.magic[2] = 'G';
+    _save.magic[3] = 'K';
+
+    for (int i = 0; i < 4; i++)
+      ((u8*)&_save.best)[i] = 0;
+    frame.best = 0;
+  } else {
+    for (int i = 0; i < 4; i++)
+      ((u8*)&frame.best)[i] = ((u8*)&_save.best)[i];
+  }
+
   clear_field();
   frame.ticks = 0;
   frame.level = 0;
@@ -299,7 +315,7 @@ static inline void next_level(int cleared)
   frame.lines.to_next -= cleared;
 
   if (frame.lines.to_next <= 0) {
-    frame.level += 0;
+    frame.level += 1;
     frame.lines.to_next = LINES_PER_LEVEL + frame.lines.to_next;
   }
 }
@@ -313,6 +329,11 @@ static void _drop(void)
 
   int cleared = _clear_lines();
   frame.points += points(cleared);
+  if (frame.points > frame.best) {
+    frame.best = frame.points;
+    for (int i = 0; i < 4; i++)
+      ((u8*)&_save.best)[i] = ((u8*)&frame.best)[i];
+  }
   frame.lines.total += cleared;
   next_level(cleared);
 }

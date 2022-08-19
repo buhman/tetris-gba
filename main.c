@@ -16,6 +16,8 @@
 
 struct frame frame = { 0 };
 
+struct save _save __attribute__ ((section (".sram")));
+
 void _user_isr(void)
 {
   io_reg.IME = 0;
@@ -29,7 +31,7 @@ void _user_isr(void)
     render_piece();
     render_queue();
     render_swap();
-    osd_render(frame.points, frame.lines.total, frame.level);
+    osd_render(frame.points, frame.lines.total, frame.level, frame.best);
   }
 
   io_reg.IF = ireq;

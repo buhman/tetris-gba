@@ -84,6 +84,7 @@ typedef struct queue {
 struct frame {
   field field;
   u32 points;
+  u32 best;
   struct {
     s32 to_next;
     u32 total;
@@ -101,9 +102,16 @@ struct frame {
   state state;
 };
 
+struct save {
+  u8 magic[4];
+  u32 best;
+};
+
 extern struct frame frame;
 
 extern const coord offsets[7][4][4];
+
+extern struct save _save;
 
 /* functions */
 

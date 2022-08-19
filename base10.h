@@ -17,7 +17,7 @@ static inline int get_shift(unsigned int n)
     if (n <= n_digits[i])
       return i;
   }
-  return 0;
+  return 7;
 }
 
 static inline void

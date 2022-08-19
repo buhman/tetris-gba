@@ -11,8 +11,9 @@
 #define NUMBER_PALETTE (15)
 
 #define LABEL_LEN (6)
-#define LABELS (3)
+#define LABELS (4)
 
+#define BEST_ROW 8
 #define LEVEL_ROW 13
 #define LINES_ROW 15
 #define SCORE_ROW 17
@@ -24,6 +25,7 @@ static struct {
   { "LEVEL:", LEVEL_ROW },
   { "LINES:", LINES_ROW },
   { "SCORE:", SCORE_ROW },
+  { " BEST:", BEST_ROW },
 };
 
 
@@ -43,42 +45,31 @@ struct osd {
   u32 score;
   u32 lines;
   u32 level;
+  u32 best;
 };
 
-static struct osd last = { -1, -1, -1 };
+static struct osd last = { -1, -1, -1, -1 };
 
-void osd_render(u32 score, u32 lines, u32 level)
+static inline void
+_osd_int(u32 row, u32 value, u32 * last_value)
 {
-  if (score != last.score) {
-    void * mem = (void *)&(vram.screen_block[31][(32 * (SCORE_ROW + 1))]);
+  if (value != *last_value) {
+    void * mem = (void *)&(vram.screen_block[31][(32 * (row + 1))]);
     fill_32(mem, 0, 10 * 2);
     uint_to_base10(
       mem,
       SCREEN_TEXT__COLOR_PALETTE(NUMBER_PALETTE) | NUMBER_OFFSET,
-      score,
+      value,
       8
       );
+    *last_value = value;
   }
+}
 
-  if (level != last.level) {
-    void * mem = (void *)&(vram.screen_block[31][(32 * (LEVEL_ROW + 1))]);
-    fill_32(mem, 0, 10 * 2);
-    uint_to_base10(
-      mem,
-      SCREEN_TEXT__COLOR_PALETTE(NUMBER_PALETTE) | NUMBER_OFFSET,
-      level,
-      8
-      );
-  }
-
-  if (lines != last.lines) {
-    void * mem = (void *)&(vram.screen_block[31][(32 * (LINES_ROW + 1))]);
-    fill_32(mem, 0, 10 * 2);
-    uint_to_base10(
-      mem,
-      SCREEN_TEXT__COLOR_PALETTE(NUMBER_PALETTE) | NUMBER_OFFSET,
-      lines,
-      8
-      );
-  }
+void osd_render(u32 score, u32 lines, u32 level, u32 best)
+{
+  _osd_int(SCORE_ROW, score, &last.score);
+  _osd_int(LEVEL_ROW, level, &last.level);
+  _osd_int(LINES_ROW, lines, &last.lines);
+  _osd_int(BEST_ROW, best, &last.best);
 }
