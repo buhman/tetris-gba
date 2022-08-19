@@ -54,6 +54,7 @@ typedef struct piece {
   dir dir;   // 1
   coord pos; // 2
   s8 drop_row; // 1
+  u8 soft_drop; // 1
 } piece;
 
 #define COLUMNS (10)

@@ -102,6 +102,7 @@ input(void)
     tetris_move((coord){1, 0}, 0);
   }
   if (EVENT_DOWN) {
+    frame.piece.soft_drop += 1;
     tetris_move((coord){0, 1}, 0);
   }
   if (EVENT_DROP) {

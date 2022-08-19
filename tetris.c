@@ -49,6 +49,29 @@ const coord offsets[7][4][4] = {
   },
 };
 
+static u8 _to_next[] = {
+  [0] = 10,
+  [1] = 20,
+  [2] = 30,
+  [3] = 40,
+  [4] = 50,
+  [5] = 60,
+  [6] = 70,
+  [7] = 80,
+  [8] = 90,
+  [9 ... 15] = 100,
+  [16] = 110,
+  [17] = 120,
+  [18] = 130,
+  [19] = 140,
+  [20] = 150,
+  [21] = 160,
+  [22] = 170,
+  [23] = 180,
+  [24] = 190,
+  [25 ... 28] = 200,
+};
+
 static bool collision(piece * p)
 {
   const coord * offset = &offsets[p->tet][p->dir][0];
@@ -83,11 +106,11 @@ static inline void clear_field(void)
   fill_32((void*)&(frame.field[0][0]),
           byte_32(TET_EMPTY),
           (sizeof (frame.field)));
-  //frame.field[39][9].color = TET_EMPTY;
 }
 
 static void _next_piece(tet t)
 {
+  frame.piece.soft_drop = 0;
   frame.piece.tet = t;
   frame.piece.pos.u = 4;
   frame.piece.pos.v = 20;
@@ -101,16 +124,12 @@ static tet next_tet(void)
   return bag_next_piece();
 }
 
-#define LINES_PER_LEVEL (10)
-
 void tetris_reset_frame(void)
 {
   if ( _save.magic[0] != 'M' || _save.magic[1] != 'A'
-    || _save.magic[2] != 'G' || _save.magic[3] != 'K') {
-    _save.magic[0] = 'M';
-    _save.magic[1] = 'A';
-    _save.magic[2] = 'G';
-    _save.magic[3] = 'K';
+    || _save.magic[2] != 'G' || _save.magic[3] != '0') {
+    _save.magic[0] = 'M'; _save.magic[1] = 'A';
+    _save.magic[2] = 'G'; _save.magic[3] = '0';
 
     for (int i = 0; i < 4; i++)
       ((u8*)&_save.best)[i] = 0;
@@ -124,7 +143,7 @@ void tetris_reset_frame(void)
   frame.ticks = 0;
   frame.level = 0;
   frame.lines.total = 0;
-  frame.lines.to_next = LINES_PER_LEVEL;
+  frame.lines.to_next = _to_next[0];
   frame.hold.piece = TET_EMPTY;
   frame.hold.swapped = false;
   frame.state = RUNNING;
@@ -297,12 +316,18 @@ static inline void _place(void)
   }
 }
 
+static u8 _base_points[5] = {1, 3, 5, 8};
 
-static u8 _base_points[5] = {0, 4, 10, 30, 120};
-
-static inline int points(int cleared)
+static inline int points(int soft_drop, int hard_drop, int cleared)
 {
-  return _base_points[cleared] * (frame.level + 1) * 10;
+  int p = 0;
+  if (cleared != 0)
+    p += _base_points[--cleared] * (frame.level + 1) * 100;
+
+  p += hard_drop * 2;
+  p += soft_drop * 1;
+
+  return p;
 }
 
 #define max(a,b)               \
@@ -316,19 +341,20 @@ static inline void next_level(int cleared)
 
   if (frame.lines.to_next <= 0) {
     frame.level += 1;
-    frame.lines.to_next = LINES_PER_LEVEL + frame.lines.to_next;
+    frame.lines.to_next = _to_next[frame.level] + frame.lines.to_next;
   }
 }
 
 static void _drop(void)
 {
   frame.hold.swapped = false;
+  int hard_drop = frame.piece.drop_row - frame.piece.pos.v;
   frame.piece.pos.v = frame.piece.drop_row;
 
   _place();
 
   int cleared = _clear_lines();
-  frame.points += points(cleared);
+  frame.points += points(frame.piece.soft_drop, hard_drop, cleared);
   if (frame.points > frame.best) {
     frame.best = frame.points;
     for (int i = 0; i < 4; i++)
