@@ -2,10 +2,13 @@
 #include "tetris.h"
 #include "xorshift.h"
 #include "bag.h"
+#include "transition.h"
 
 typedef struct count_flop {
   s8 count;
   u8 flop;
+  s8 das;
+  u8 repeat;
 } count_flop_t;
 
 typedef struct input {
@@ -21,28 +24,41 @@ typedef struct input {
   count_flop_t select;
 } input_t;
 
+#define KEY_FLIP_COUNT (2)
+#define KEY_DAS_COUNT (15)
+
 static inline void
 key_input_count(count_flop_t * key, unsigned int input, unsigned int mask)
 {
   if (input & mask) {
-    if (key->count < 2)
+    if (key->count < KEY_FLIP_COUNT)
       key->count += 1;
+    else
+      key->das += 1;
   } else {
-    if (key->count > 0)
-      key->count -= 1;
-    if (key->count == 0)
+    if (key->count == 0) {
       key->flop = 0;
+      key->das = 0;
+      key->repeat = 0;
+    }
+    else if (key->count > 0)
+      key->count -= 1;
   }
 }
 
-static inline bool
+static inline u8
 key_flopped(count_flop_t * key)
 {
-  if (key->count == 2 && key->flop == 0) {
+  if (key->count == KEY_FLIP_COUNT && key->flop == 0) {
     key->flop = 1;
-    return true;
+    return 1;
+  } else if (key->flop == 1 && key->das == 10 && key->repeat == 0) {
+    key->repeat = 1;
+    return 2;
+  } else if (key->repeat == 1 && ((key->das & 1) == 0)) {
+    return 2;
   } else {
-    return false;
+    return 0;
   }
 }
 
@@ -70,29 +86,35 @@ input(void)
   key_input_count(&_input.start, key_input, KEYCNT__INPUT_ST);
   key_input_count(&_input.select, key_input, KEYCNT__INPUT_SL);
 
-#define EVENT_LEFT (key_flopped(&_input.left))
-#define EVENT_RIGHT (key_flopped(&_input.right))
-#define EVENT_DOWN (key_flopped(&_input.down))
-#define EVENT_SWAP (key_flopped(&_input.up))
-#define EVENT_DROP (key_flopped(&_input.l))
-#define EVENT_ROTATE_CW (key_flopped(&_input.a))
-#define EVENT_ROTATE_CCW (key_flopped(&_input.b))
+#define EVENT_LEFT (key_flopped(&_input.left) != 0)
+#define EVENT_RIGHT (key_flopped(&_input.right) != 0)
+#define EVENT_DOWN (key_flopped(&_input.down) != 0)
+#define EVENT_SWAP (key_flopped(&_input.up) == 1)
+#define EVENT_DROP (key_flopped(&_input.l) == 1)
+#define EVENT_ROTATE_CW (key_flopped(&_input.a) == 1)
+#define EVENT_ROTATE_CCW (key_flopped(&_input.b) == 1)
 
-#define EVENT_START (key_flopped(&_input.start))
-#define EVENT_PAUSE (key_flopped(&_input.select))
+#define EVENT_START (key_flopped(&_input.start) == 1)
+#define EVENT_CONFIRM (key_flopped(&_input.select) == 1)
 
   if (EVENT_START) {
-    tetris_reset_frame();
-  }
-  if (EVENT_PAUSE) {
     switch (frame.state) {
-    case RUNNING: frame.state = PAUSED; break;
-    case PAUSED: frame.state = RUNNING; break;
+    case STATE_RUNNING: transition(STATE_PAUSED); break;
+    case STATE_PAUSED: transition(STATE_RUNNING); break;
+    case STATE_TOPPED_OUT: break;
+    default: transition(STATE_RESET); break;
+    }
+  }
+  if (EVENT_CONFIRM) {
+    switch (frame.state) {
+    case STATE_RUNNING: transition(STATE_PAUSED); break;
+    case STATE_PAUSED:
+    case STATE_TOPPED_OUT: transition(STATE_RESET); break;
     default: break;
     }
   }
 
-  if (frame.state != RUNNING)
+  if (frame.state != STATE_RUNNING)
     return;
 
   if (EVENT_LEFT) {

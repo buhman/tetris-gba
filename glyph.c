@@ -18,6 +18,10 @@ static struct start_size fonts[] = {
   {
     (u32)&_binary_res_BmPlus_ToshibaSat_8x8_glyph_size,
     (u8 *)&_binary_res_BmPlus_ToshibaSat_8x8_glyph_start
+  },
+  {
+    (u32)&_binary_res_Bm437_CL_EagleIII_8x16_glyph_size,
+    (u8 *)&_binary_res_Bm437_CL_EagleIII_8x16_glyph_start
   }
 };
 

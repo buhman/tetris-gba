@@ -4,6 +4,7 @@
 
 #include "type.h"
 #include "base.h"
+#include "transition.h"
 
 typedef enum tet {
   TET_Z,
@@ -55,6 +56,10 @@ typedef struct piece {
   coord pos; // 2
   s8 drop_row; // 1
   u8 soft_drop; // 1
+  struct {
+    u8 locking;
+    u8 ticks;
+  } lock_delay;
 } piece;
 
 #define COLUMNS (10)
@@ -63,12 +68,6 @@ typedef struct piece {
 
 typedef struct cell field[ROWS][COLUMNS];
 static_assert((sizeof (field)) == (ROWS * COLUMNS));
-
-typedef enum state {
-  PRE_START = 0,
-  RUNNING,
-  PAUSED
-} state;
 
 #define BAG_QUEUE_LEN (6)
 
@@ -86,6 +85,7 @@ struct frame {
   field field;
   u32 points;
   u32 best;
+  s32 combo;
   struct {
     s32 to_next;
     u32 total;

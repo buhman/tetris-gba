@@ -19,7 +19,19 @@ static const u16 colors[] = {
   [TET_LAST] = PRAM_RGB15(6, 6, 6),
 };
 
-static const u16 colors2[] = {
+static const u16 colors_lock[] = {
+  [TET_Z] = PRAM_RGB15(31, 6, 7),
+  [TET_L] = PRAM_RGB15(31, 17, 6),
+  [TET_O] = PRAM_RGB15(31, 26, 2),
+  [TET_S] = PRAM_RGB15(10, 24, 10),
+  [TET_I] = PRAM_RGB15(8, 26, 31),
+  [TET_J] = PRAM_RGB15(13, 14, 23),
+  [TET_T] = PRAM_RGB15(23, 11, 21),
+  [TET_EMPTY] = PRAM_RGB15(2, 2, 2),
+  [TET_LAST] = PRAM_RGB15(8, 8, 8),
+};
+
+static const u16 colors_ghost[] = {
   [TET_Z] = PRAM_RGB15(10, 1, 2),
   [TET_L] = PRAM_RGB15(10, 5, 1),
   [TET_O] = PRAM_RGB15(10, 9, 0),
@@ -36,12 +48,14 @@ init_palettes(void)
 {
   for (int i = 0; i <= TET_LAST; i++) {
     pram.bg[i][1] = colors[i];
-    pram.bg[i][2] = colors2[i];
+    pram.bg[i][2] = colors_ghost[i];
+    pram.bg[i][3] = colors_lock[i];
   }
 
   for (int i = 0; i <= TET_LAST; i++) {
     pram.obj[1][i + 1] = colors[i];
-    pram.obj[2][i + 1] = colors2[i];
+    pram.obj[2][i + 1] = colors_ghost[i];
+    pram.obj[3][i + 1] = colors_lock[i];
   }
 }
 
@@ -98,8 +112,8 @@ render_piece(void)
     );
 
   oam.obj[0].attr[2] =
-    ( OBJ_A2__COLOR_PALETTE(1)
-    | OBJ_A2__PRIORITY(0)
+    ( OBJ_A2__COLOR_PALETTE(frame.piece.lock_delay.locking ? 3 : 1)
+    | OBJ_A2__PRIORITY(1)
     | OBJ_A2__CHARACTER(c)
     );
 
@@ -118,7 +132,7 @@ render_piece(void)
 
   oam.obj[1].attr[2] =
     ( OBJ_A2__COLOR_PALETTE(2)
-    | OBJ_A2__PRIORITY(0)
+    | OBJ_A2__PRIORITY(1)
     | OBJ_A2__CHARACTER(c)
     );
 }
@@ -127,10 +141,6 @@ void render_static_backgrounds(void)
 {
   /* static backgrounds */
   fill_32((void*)&vram.screen_block[31][0],
-          half_32(SCREEN_TEXT__CHARACTER(0)),
-          SCREEN_BASE_BLOCK_LENGTH);
-
-  fill_32((void*)&vram.screen_block[30][0],
           half_32(SCREEN_TEXT__CHARACTER(0)),
           SCREEN_BASE_BLOCK_LENGTH);
 
@@ -188,7 +198,7 @@ void render_queue(void)
 
     oam.obj[R_QUEUE_OFFSET + i].attr[2] =
       ( OBJ_A2__COLOR_PALETTE(1)
-      | OBJ_A2__PRIORITY(0)
+      | OBJ_A2__PRIORITY(1)
       | OBJ_A2__CHARACTER(c)
       );
   }
@@ -212,7 +222,7 @@ void render_swap(void)
 
     oam.obj[R_SWAP_OFFSET].attr[2] =
       ( OBJ_A2__COLOR_PALETTE(1)
-      | OBJ_A2__PRIORITY(0)
+      | OBJ_A2__PRIORITY(1)
       | OBJ_A2__CHARACTER(c)
       );
   } else {

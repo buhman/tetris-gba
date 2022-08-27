@@ -113,8 +113,14 @@ static void _next_piece(tet t)
   frame.piece.soft_drop = 0;
   frame.piece.tet = t;
   frame.piece.pos.u = 4;
-  frame.piece.pos.v = 20;
+  frame.piece.pos.v = 18;
   frame.piece.dir = DIR_UP;
+  frame.piece.lock_delay.locking = false;
+  frame.piece.lock_delay.ticks = 0;
+
+  if (collision(&frame.piece)) {
+    transition(STATE_TOPPED_OUT);
+  }
 
   update_drop_row(&frame.piece);
 }
@@ -140,13 +146,14 @@ void tetris_reset_frame(void)
   }
 
   clear_field();
+  frame.combo = -1;
   frame.ticks = 0;
   frame.level = 0;
+  frame.points = 0;
   frame.lines.total = 0;
   frame.lines.to_next = _to_next[0];
   frame.hold.piece = TET_EMPTY;
   frame.hold.swapped = false;
-  frame.state = RUNNING;
 
   bag_reset();
   _next_piece(next_tet());
@@ -219,12 +226,7 @@ bool tetris_move(coord offset, int rotation)
       if (offset.u || rotation)
         update_drop_row(&frame.piece);
 
-      /*
-       * if (piece.lock_delay.locking) {
-       *   piece.lock_delay.moves += 1;
-       *   piece.lock_delay.point = tetris::clock::now();
-       * }
-       */
+      frame.piece.lock_delay.ticks = 0;
 
       return true;
     }
@@ -318,14 +320,17 @@ static inline void _place(void)
 
 static u8 _base_points[5] = {1, 3, 5, 8};
 
-static inline int points(int soft_drop, int hard_drop, int cleared)
+static inline int points(int soft_drop, int hard_drop, int cleared, int combo)
 {
   int p = 0;
-  if (cleared != 0)
+  if (cleared > 0)
     p += _base_points[--cleared] * (frame.level + 1) * 100;
 
   p += hard_drop * 2;
   p += soft_drop * 1;
+
+  if (combo > 0)
+    p += combo * 50 * frame.level;
 
   return p;
 }
@@ -348,38 +353,69 @@ static inline void next_level(int cleared)
 static void _drop(void)
 {
   frame.hold.swapped = false;
-  int hard_drop = frame.piece.drop_row - frame.piece.pos.v;
+  int hard_drop = max(frame.piece.drop_row - frame.piece.pos.v, 0);
   frame.piece.pos.v = frame.piece.drop_row;
 
   _place();
 
   int cleared = _clear_lines();
-  frame.points += points(frame.piece.soft_drop, hard_drop, cleared);
+  if (cleared == 0) frame.combo = -1;
+  else frame.combo += 1;
+
+  frame.points += points(frame.piece.soft_drop, hard_drop, cleared, frame.combo);
   if (frame.points > frame.best) {
-    frame.best = frame.points;
     for (int i = 0; i < 4; i++)
-      ((u8*)&_save.best)[i] = ((u8*)&frame.best)[i];
+      ((u8*)&_save.best)[i] = ((u8*)&frame.points)[i];
   }
   frame.lines.total += cleared;
   next_level(cleared);
 }
 
+bool _topped_out(piece * p)
+{
+  const coord * offset = &offsets[p->tet][p->dir][0];
+  for (int i = 0; i < 4; i++) {
+    int pv_o = p->drop_row + offset[i].v;
+    if (pv_o >= 20)
+      return false;
+  }
+  return true;
+}
+
 void tetris_drop(void)
 {
   frame.hold.swapped = false;
+
+  if (_topped_out(&frame.piece))
+    transition(STATE_TOPPED_OUT);
+
   _drop();
   _next_piece(next_tet());
+}
+
+int lock_delay_should_drop(void)
+{
+  if (frame.piece.lock_delay.locking) {
+    if (frame.piece.lock_delay.ticks++ >= 30)
+      return true;
+    else {
+      return false;
+    }
+  }
 }
 
 void tetris_tick(void)
 {
   frame.ticks += 1;
 
-  if (!gravity())
-    return;
+  if (gravity()) {
+    if (tetris_move((coord){0, 1}, 0)) {
+    } else {
+      frame.piece.lock_delay.locking = true;
+    }
+  }
 
-  if (tetris_move((coord){0, 1}, 0)) {
-  } else {
+  if (lock_delay_should_drop()) {
     tetris_drop();
   }
 }

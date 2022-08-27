@@ -5,3 +5,7 @@ extern unsigned int _binary_res_Bm437_CompaqThin_8x8_glyph_size;
 extern unsigned int _binary_res_BmPlus_ToshibaSat_8x8_glyph_start;
 extern unsigned int _binary_res_BmPlus_ToshibaSat_8x8_glyph_end;
 extern unsigned int _binary_res_BmPlus_ToshibaSat_8x8_glyph_size;
+
+extern unsigned int _binary_res_Bm437_CL_EagleIII_8x16_glyph_start;
+extern unsigned int _binary_res_Bm437_CL_EagleIII_8x16_glyph_end;
+extern unsigned int _binary_res_Bm437_CL_EagleIII_8x16_glyph_size;

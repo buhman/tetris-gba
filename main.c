@@ -25,13 +25,16 @@ void _user_isr(void)
 
   input();
 
-  if (frame.state == RUNNING) {
+  switch (frame.state) {
+  case STATE_RUNNING:
     tetris_tick();
     render_field();
     render_piece();
     render_queue();
     render_swap();
-    osd_render(frame.points, frame.lines.total, frame.level, frame.best);
+    osd_render(frame.points, frame.lines.total, frame.level, frame.best, frame.combo);
+    break;
+  default: break;
   }
 
   io_reg.IF = ireq;
@@ -41,7 +44,6 @@ void _user_isr(void)
 void _start(void)
 {
   init_palettes();
-  frame.state = PRE_START;
 
   fill_32((void*)&vram.character_block[0][tile(0)],
           nib_32(0),
@@ -60,36 +62,28 @@ void _start(void)
   render_static_backgrounds();
   render_init_queue();
 
+  transition(STATE_TITLE);
+
   pram.bg[14][1] = PRAM_RGB15(25, 25, 25);
   pram.bg[15][1] = PRAM_RGB15(31, 31, 31);
   glyph_init(1, 0, 0);
 
   osd_labels();
 
-  io_reg.DISPCNT =
-    ( DISPCNT__BG0
-    | DISPCNT__BG1
-    | DISPCNT__BG2
-    | DISPCNT__BG3
-    | DISPCNT__OBJ
-    | DISPCNT__OBJ_1_DIMENSION
-    | DISPCNT__BG_MODE_0
-    );
-
   io_reg.BG0CNT =
     ( BG_CNT__COLOR_16_16
     | BG_CNT__SCREEN_SIZE(0)
     | BG_CNT__CHARACTER_BASE_BLOCK(1)
     | BG_CNT__SCREEN_BASE_BLOCK(31)
-    | BG_CNT__PRIORITY(0)
+    | BG_CNT__PRIORITY(1)
     );
 
   io_reg.BG1CNT =
     ( BG_CNT__COLOR_16_16
     | BG_CNT__SCREEN_SIZE(0)
-    | BG_CNT__CHARACTER_BASE_BLOCK(0)
+    | BG_CNT__CHARACTER_BASE_BLOCK(1)
     | BG_CNT__SCREEN_BASE_BLOCK(30)
-    | BG_CNT__PRIORITY(1)
+    | BG_CNT__PRIORITY(0)
     );
 
   io_reg.BG2CNT =
