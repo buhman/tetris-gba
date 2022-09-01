@@ -58,8 +58,8 @@ void music_step(void)
       case 0:
         io_reg.SOUND1_CNT_H =
           ( SOUND1_CNT_H__ENVELOPE_VALUE(frequency == 0 ? 0 : 9)
-          | SOUND1_CNT_H__ENVELOPE_STEPS(0)
-          | SOUND1_CNT_H__DUTY_CYCLE(3)
+          | SOUND1_CNT_H__ENVELOPE_STEPS(3)
+          | SOUND1_CNT_H__DUTY_CYCLE(2)
           );
 
         io_reg.SOUND1_CNT_X =
@@ -70,7 +70,7 @@ void music_step(void)
       case 1:
         io_reg.SOUND2_CNT_L =
           ( SOUND2_CNT_L__ENVELOPE_VALUE(frequency == 0 ? 0 : 9)
-          | SOUND2_CNT_L__ENVELOPE_STEPS(0)
+          | SOUND2_CNT_L__ENVELOPE_STEPS(1)
           | SOUND2_CNT_L__DUTY_CYCLE(3)
           );
         io_reg.SOUND2_CNT_H =
@@ -81,7 +81,7 @@ void music_step(void)
       case 2:
         io_reg.SOUND3_CNT_H =
           ( SOUND3_CNT_H__OUTPUT_LEVEL(frequency == 0 ? 0 : 1)
-          | SOUND3_CNT_H__SOUND_LENGTH(0)
+          | SOUND3_CNT_H__SOUND_LENGTH(1)
           );
         io_reg.SOUND3_CNT_X =
           ( SOUND3_CNT_X__FREQUNCY_DATA(frequency)
@@ -136,7 +136,7 @@ void music_score_init(void)
   sequence_length = s->sequence_length;
   _voices = (void*)((u32)s + 4);
 
-  state.measure = 0;
+  state.measure = 40;
 }
 
 void music_init(void)
@@ -174,10 +174,14 @@ void music_init(void)
     | SOUND1_CNT_L__SWEEP_SHIFTS(0)
     );
 
-  *((volatile u32 *)(&io_reg.WAVE_RAM0_L)) = 0xfedcba98;
-  *((volatile u32 *)(&io_reg.WAVE_RAM1_L)) = 0x76543210;
-  *((volatile u32 *)(&io_reg.WAVE_RAM2_L)) = 0xfedcba98;
-  *((volatile u32 *)(&io_reg.WAVE_RAM3_L)) = 0x76543210;
+  *((volatile u32 *)(&io_reg.WAVE_RAM0_L)) = 0x77665544;
+  *((volatile u32 *)(&io_reg.WAVE_RAM1_L)) = 0x33221100;
+  *((volatile u32 *)(&io_reg.WAVE_RAM2_L)) = 0x77665544;
+  *((volatile u32 *)(&io_reg.WAVE_RAM3_L)) = 0x33221100;
+  //*((volatile u32 *)(&io_reg.WAVE_RAM0_L)) = 0xfedcba98;
+  //*((volatile u32 *)(&io_reg.WAVE_RAM1_L)) = 0x76543210;
+  //*((volatile u32 *)(&io_reg.WAVE_RAM2_L)) = 0xfedcba98;
+  //*((volatile u32 *)(&io_reg.WAVE_RAM3_L)) = 0x76543210;
 
   io_reg.SOUND3_CNT_L =
     ( SOUND3_CNT_L__SOUND_OUTPUT
