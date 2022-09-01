@@ -7,3 +7,5 @@
 *.glyph
 otb-convert
 *.score
+__pycache__/
+*.pyc
