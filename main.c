@@ -13,6 +13,7 @@
 #include "obj_tet.h"
 #include "glyph.h"
 #include "osd.h"
+#include "music.h"
 
 struct frame frame = { 0 };
 
@@ -23,18 +24,24 @@ void _user_isr(void)
   io_reg.IME = 0;
   u32 ireq = io_reg.IF;
 
-  input();
+  if ((ireq & IE__TIMER_0) != 0) {
+    ireq = IE__TIMER_0;
+    music_tick();
+  } else if ((ireq & IE__V_BLANK) != 0) {
+    ireq = IE__V_BLANK;
+    input();
 
-  switch (frame.state) {
-  case STATE_RUNNING:
-    tetris_tick();
-    render_field();
-    render_piece();
-    render_queue();
-    render_swap();
-    osd_render(frame.points, frame.lines.total, frame.level, frame.best, frame.combo);
-    break;
-  default: break;
+    switch (frame.state) {
+    case STATE_RUNNING:
+      tetris_tick();
+      render_field();
+      render_piece();
+      render_queue();
+      render_swap();
+      osd_render(frame.points, frame.lines.total, frame.level, frame.best, frame.combo);
+      break;
+    default: break;
+    }
   }
 
   io_reg.IF = ireq;
@@ -43,6 +50,8 @@ void _user_isr(void)
 
 void _start(void)
 {
+  music_init();
+
   init_palettes();
 
   fill_32((void*)&vram.character_block[0][tile(0)],
@@ -68,24 +77,25 @@ void _start(void)
   pram.bg[15][1] = PRAM_RGB15(31, 31, 31);
   glyph_init(1, 0, 0);
 
-  osd_labels();
-
+  // OSD text
   io_reg.BG0CNT =
     ( BG_CNT__COLOR_16_16
     | BG_CNT__SCREEN_SIZE(0)
     | BG_CNT__CHARACTER_BASE_BLOCK(1)
     | BG_CNT__SCREEN_BASE_BLOCK(31)
-    | BG_CNT__PRIORITY(1)
-    );
-
-  io_reg.BG1CNT =
-    ( BG_CNT__COLOR_16_16
-    | BG_CNT__SCREEN_SIZE(0)
-    | BG_CNT__CHARACTER_BASE_BLOCK(1)
-    | BG_CNT__SCREEN_BASE_BLOCK(30)
     | BG_CNT__PRIORITY(0)
     );
 
+  // pause/title background
+  io_reg.BG1CNT =
+    ( BG_CNT__COLOR_16_16
+    | BG_CNT__SCREEN_SIZE(0)
+    | BG_CNT__CHARACTER_BASE_BLOCK(0)
+    | BG_CNT__SCREEN_BASE_BLOCK(30)
+    | BG_CNT__PRIORITY(1)
+    );
+
+  // unused
   io_reg.BG2CNT =
     ( BG_CNT__COLOR_16_16
     | BG_CNT__SCREEN_SIZE(0)
@@ -94,6 +104,7 @@ void _start(void)
     | BG_CNT__PRIORITY(2)
     );
 
+  // tetris field and sidebar background
   io_reg.BG3CNT =
     ( BG_CNT__COLOR_16_16
     | BG_CNT__SCREEN_SIZE(0)
@@ -104,8 +115,17 @@ void _start(void)
 
   *(volatile u32 *)(IWRAM_USER_ISR) = (u32)(&_user_isr);
 
+
+  io_reg.TM0CNT_L = (u16)-3581;
+
+  io_reg.TM0CNT_H =
+    ( 0 //TM_CNT_H__ENABLE
+    | TM_CNT_H__INT_ENABLE
+    | TM_CNT_H__PRESCALAR_64
+    );
+
   io_reg.DISPSTAT = DISPSTAT__V_BLANK_INT_ENABLE;
-  io_reg.IE = IE__V_BLANK;
+  io_reg.IE = IE__V_BLANK | IE__TIMER_0;
   io_reg.IF = (u16)-1;
   io_reg.IME = IME__INT_MASTER_ENABLE;
 

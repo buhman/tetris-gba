@@ -9,7 +9,8 @@
 #define LABEL_OFFSET (1 * 256)  // length=256
 #define NUMBER_OFFSET (0 * 256) // length=256
 #define LABEL_PALETTE (14)
-#define NUMBER_PALETTE (15)
+#define NUMBER_PALETTE (14)
+#define PAUSED_PALETTE (15)
 
 #define LABEL_LEN (6)
 #define LABELS (5)
@@ -45,7 +46,7 @@ static void _label(int j)
 static void _clear_label(int j)
 {
   for (int i = 0; i < LABEL_LEN; i++) {
-    vram.screen_block[31][(32 * labels[j].row) + (1+i)] = 0;
+    vram.screen_block[31][(32 * labels[j].row) + (1+i)] = TITLE_OFFSET;
   }
 }
 
@@ -56,7 +57,7 @@ void osd_labels(void)
   }
 
   static u8 ana[] = "ana";
-  for (int j = 0; j < 3; j++) {
+  for (int j = 0; j < (sizeof ana); j++) {
     vram.screen_block[31][(32 * 19) + (27+j)] =
       ( SCREEN_TEXT__COLOR_PALETTE(LABEL_PALETTE)
       | SCREEN_TEXT__CHARACTER(LABEL_OFFSET + ana[j])
@@ -74,12 +75,14 @@ struct osd {
 
 static struct osd last = { -1, -1, -1, -1, -2 };
 
+#define CLEAR_LINE(mem) (fill_32(mem, half_32(TITLE_OFFSET), 10 * 2))
+
 static void
 _osd_uint(u32 row, u32 value, u32 * last_value)
 {
   if (value != *last_value) {
     void * mem = (void *)&(vram.screen_block[31][(32 * (row + 1))]);
-    fill_32(mem, 0, 10 * 2);
+    CLEAR_LINE(mem);
     uint_to_base10(
       mem,
       SCREEN_TEXT__COLOR_PALETTE(NUMBER_PALETTE) | NUMBER_OFFSET,
@@ -95,7 +98,7 @@ _osd_sint(u32 row, s32 value, s32 * last_value)
 {
   if (value != *last_value) {
     void * mem = (void *)&(vram.screen_block[31][(32 * (row + 1))]);
-    fill_32(mem, 0, 10 * 2);
+    CLEAR_LINE(mem);
     if (value > 0)
       uint_to_base10(
         mem,
@@ -126,11 +129,11 @@ static inline void _text16(u8 * buf, u32 size) {
   int t_x = ((15 - (size >> 1)));
 
   for (int i = 0; i < size; i++) {
-    vram.screen_block[30][32 * 8 + t_x + i] =
+    vram.screen_block[31][32 * 8 + t_x + i] =
       ( SCREEN_TEXT__COLOR_PALETTE(NUMBER_PALETTE)
       | SCREEN_TEXT__CHARACTER(TITLE_OFFSET + (buf[i] * 2))
       );
-    vram.screen_block[30][32 * 9 + t_x + i] =
+    vram.screen_block[31][32 * 9 + t_x + i] =
       ( SCREEN_TEXT__COLOR_PALETTE(NUMBER_PALETTE)
       | SCREEN_TEXT__CHARACTER(TITLE_OFFSET + (buf[i] * 2 + 1))
       );
@@ -156,8 +159,8 @@ void osd_paused(void)
 
   for (int j = 0; j < 2; j++) {
     for (int i = 0; i < 17; i++) {
-      vram.screen_block[30][32 * (11 + j * 2) + t_x + i] =
-        ( SCREEN_TEXT__COLOR_PALETTE(NUMBER_PALETTE)
+      vram.screen_block[31][32 * (11 + j * 2) + t_x + i] =
+        ( SCREEN_TEXT__COLOR_PALETTE(PAUSED_PALETTE)
         | SCREEN_TEXT__CHARACTER(LABEL_OFFSET + instructions[j][i])
         );
     }
@@ -172,16 +175,27 @@ void osd_topped_out(void)
   int t_x = ((15 - (17 >> 1)));
 
   for (int i = 0; i < 17; i++) {
-    vram.screen_block[30][32 * (11 + 0 * 2) + t_x + i] =
+    vram.screen_block[31][32 * (11 + 0 * 2) + t_x + i] =
       ( SCREEN_TEXT__COLOR_PALETTE(NUMBER_PALETTE)
       | SCREEN_TEXT__CHARACTER(LABEL_OFFSET + instructions[0][i])
       );
   }
 }
 
+static inline void osd_invalidate(void)
+{
+  last.score = -1;
+  last.lines = -1;
+  last.level = -1;
+  last.best = -1;
+  last.combo = -2;
+}
+
 void osd_clear(void)
 {
-  fill_32((void*)&vram.screen_block[30][0],
+  osd_invalidate();
+
+  fill_32((void*)&vram.screen_block[31][0],
           half_32(SCREEN_TEXT__CHARACTER(0)),
           SCREEN_BASE_BLOCK_LENGTH);
 }

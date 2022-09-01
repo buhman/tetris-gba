@@ -59,33 +59,6 @@ init_palettes(void)
   }
 }
 
-
-/*
-void
-render_piece(void)
-{
-  for (int i = 0; i < 4; i++) {
-    coord off;
-    off.u = offsets[frame.piece.tet][frame.piece.dir][i].u;
-    off.v = offsets[frame.piece.tet][frame.piece.dir][i].v;
-    int x = 10 + off.u + frame.piece.pos.u;
-    int y = (off.v + frame.piece.pos.v) - 20;
-    int y_ghost = (off.v + frame.piece.drop_row) - 20;
-
-    vram.screen_block[29][(y_ghost * 32) + x] =
-      ( SCREEN_TEXT__COLOR_PALETTE(frame.piece.tet)
-      | SCREEN_TEXT__CHARACTER(3)
-      );
-
-    vram.screen_block[29][(y * 32) + x] =
-      ( SCREEN_TEXT__COLOR_PALETTE(frame.piece.tet)
-      | SCREEN_TEXT__CHARACTER(2)
-      );
-  }
-}
-*/
-
-
 void
 render_piece(void)
 {
@@ -144,6 +117,14 @@ void render_static_backgrounds(void)
           half_32(SCREEN_TEXT__CHARACTER(0)),
           SCREEN_BASE_BLOCK_LENGTH);
 
+  fill_32((void*)&vram.screen_block[30][0],
+          half_32
+            ( SCREEN_TEXT__COLOR_PALETTE(TET_Z)
+            | SCREEN_TEXT__CHARACTER(1)
+            ),
+          SCREEN_BASE_BLOCK_LENGTH);
+
+  // unused
   fill_32((void*)&vram.screen_block[29][0],
           half_32(SCREEN_TEXT__CHARACTER(0)),
           SCREEN_BASE_BLOCK_LENGTH);
@@ -175,7 +156,7 @@ void render_field(void)
 {
   for (int y = 0; y < 20; y++) {
     for (int x = 0; x < 10; x++) {
-      vram.screen_block[29][(y * 32) + (x + 10)] =
+      vram.screen_block[28][(y * 32) + (x + 10)] =
         ( SCREEN_TEXT__COLOR_PALETTE(frame.field[y + 20][x].color)
         | SCREEN_TEXT__CHARACTER(2)
         );

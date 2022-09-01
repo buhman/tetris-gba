@@ -402,6 +402,7 @@ int lock_delay_should_drop(void)
       return false;
     }
   }
+  return false;
 }
 
 void tetris_tick(void)

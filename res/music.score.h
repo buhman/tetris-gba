@@ -1,0 +1,3 @@
+extern unsigned int _binary_res_music_score_start;
+extern unsigned int _binary_res_music_score_end;
+extern unsigned int _binary_res_music_score_size;

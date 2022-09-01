@@ -13,7 +13,7 @@ static void transition_title(void)
   osd_title();
 
   io_reg.DISPCNT =
-    ( DISPCNT__BG1
+    ( DISPCNT__BG0
     | DISPCNT__BG_MODE_0
     );
 }
@@ -26,9 +26,11 @@ static void transition_reset(void)
 
 static void transition_running(void)
 {
+  osd_clear();
+  osd_labels();
+
   io_reg.DISPCNT =
     ( DISPCNT__BG0
-    | DISPCNT__BG2
     | DISPCNT__BG3
     | DISPCNT__OBJ
     | DISPCNT__OBJ_1_DIMENSION
@@ -44,23 +46,17 @@ static void transition_paused(void)
   io_reg.DISPCNT =
     ( DISPCNT__BG0
     | DISPCNT__BG1
-    | DISPCNT__BG2
-    | DISPCNT__BG3
-    | DISPCNT__OBJ
-    | DISPCNT__OBJ_1_DIMENSION
     | DISPCNT__BG_MODE_0
     );
 }
 
 static void transition_topped_out(void)
 {
-  osd_clear();
   osd_topped_out();
 
   io_reg.DISPCNT =
     ( DISPCNT__BG0
     | DISPCNT__BG1
-    | DISPCNT__BG2
     | DISPCNT__BG3
     | DISPCNT__OBJ
     | DISPCNT__OBJ_1_DIMENSION
