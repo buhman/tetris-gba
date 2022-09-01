@@ -15,10 +15,6 @@
 #include "osd.h"
 #include "music.h"
 
-struct frame frame = { 0 };
-
-struct save _save __attribute__ ((section (".sram")));
-
 void _user_isr(void)
 {
   io_reg.IME = 0;
@@ -39,6 +35,9 @@ void _user_isr(void)
       render_queue();
       render_swap();
       osd_render(frame.points, frame.lines.total, frame.level, frame.best, frame.combo);
+      break;
+    case STATE_PAUSED:
+      osd_menu_render();
       break;
     default: break;
     }
@@ -71,11 +70,11 @@ void _start(void)
   render_static_backgrounds();
   render_init_queue();
 
-  transition(STATE_TITLE);
-
   pram.bg[14][1] = PRAM_RGB15(25, 25, 25);
   pram.bg[15][1] = PRAM_RGB15(31, 31, 31);
   glyph_init(1, 0, 0);
+
+  transition(STATE_TITLE);
 
   // OSD text
   io_reg.BG0CNT =
@@ -115,11 +114,10 @@ void _start(void)
 
   *(volatile u32 *)(IWRAM_USER_ISR) = (u32)(&_user_isr);
 
-
   io_reg.TM0CNT_L = (u16)-3581;
 
   io_reg.TM0CNT_H =
-    ( 0 //TM_CNT_H__ENABLE
+    ( TM_CNT_H__ENABLE
     | TM_CNT_H__INT_ENABLE
     | TM_CNT_H__PRESCALAR_64
     );

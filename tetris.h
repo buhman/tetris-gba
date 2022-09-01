@@ -103,10 +103,25 @@ struct frame {
   state state;
 };
 
+union options {
+  struct {
+    u8 das;
+    u8 arr;
+  };
+  u8 option[1];
+};
+
 struct save {
   u8 magic[4];
   u32 best;
+  struct {
+    u8 das;
+    u8 arr;
+    u16 _padding;
+  } options;
 };
+
+extern union options options;
 
 extern struct frame frame;
 
@@ -125,3 +140,5 @@ void tetris_tick(void);
 void tetris_drop(void);
 
 void tetris_swap(void);
+
+void tetris_save_options(void);

@@ -27,7 +27,7 @@ static void transition_reset(void)
 static void transition_running(void)
 {
   osd_clear();
-  osd_labels();
+  osd_score_labels();
 
   io_reg.DISPCNT =
     ( DISPCNT__BG0
@@ -42,10 +42,11 @@ static void transition_paused(void)
 {
   osd_clear();
   osd_paused();
+  osd_menu_labels();
 
   io_reg.DISPCNT =
     ( DISPCNT__BG0
-    | DISPCNT__BG1
+      //| DISPCNT__BG1
     | DISPCNT__BG_MODE_0
     );
 }
@@ -74,6 +75,9 @@ static transition_t _transitions[STATE_LAST] = {
 
 void transition(enum state state)
 {
+  if (frame.state == STATE_PAUSED)
+    tetris_save_options();
+
   frame.state = state;
   (*_transitions[state])();
 }

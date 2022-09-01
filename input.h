@@ -3,11 +3,12 @@
 #include "xorshift.h"
 #include "bag.h"
 #include "transition.h"
+#include "osd.h"
 
 typedef struct count_flop {
   s8 count;
   u8 flop;
-  s8 das;
+  u8 das;
   u8 repeat;
 } count_flop_t;
 
@@ -25,7 +26,6 @@ typedef struct input {
 } input_t;
 
 #define KEY_FLIP_COUNT (2)
-#define KEY_DAS_COUNT (15)
 
 static inline void
 key_input_count(count_flop_t * key, unsigned int input, unsigned int mask)
@@ -52,10 +52,12 @@ key_flopped(count_flop_t * key)
   if (key->count == KEY_FLIP_COUNT && key->flop == 0) {
     key->flop = 1;
     return 1;
-  } else if (key->flop == 1 && key->das == 10 && key->repeat == 0) {
+  } else if (key->flop == 1 && key->das == options.das && key->repeat == 0) {
     key->repeat = 1;
+    key->das = 0;
     return 2;
-  } else if (key->repeat == 1 && ((key->das & 1) == 0)) {
+  } else if (key->repeat == 1 && (key->das == options.arr)) {
+    key->das = 0;
     return 2;
   } else {
     return 0;
@@ -86,14 +88,8 @@ input(void)
   key_input_count(&_input.start, key_input, KEYCNT__INPUT_ST);
   key_input_count(&_input.select, key_input, KEYCNT__INPUT_SL);
 
-#define EVENT_LEFT (key_flopped(&_input.left) != 0)
-#define EVENT_RIGHT (key_flopped(&_input.right) != 0)
-#define EVENT_DOWN (key_flopped(&_input.down) != 0)
-#define EVENT_SWAP (key_flopped(&_input.up) == 1)
-#define EVENT_DROP (key_flopped(&_input.l) == 1)
-#define EVENT_ROTATE_CW (key_flopped(&_input.a) == 1)
-#define EVENT_ROTATE_CCW (key_flopped(&_input.b) == 1)
-
+  // != 0 is repeating
+  // == 1 is non-repeating
 #define EVENT_START (key_flopped(&_input.start) == 1)
 #define EVENT_CONFIRM (key_flopped(&_input.select) == 1)
 
@@ -114,29 +110,44 @@ input(void)
     }
   }
 
-  if (frame.state != STATE_RUNNING)
-    return;
+  switch (frame.state) {
 
-  if (EVENT_LEFT) {
-    tetris_move((coord){-1, 0}, 0);
-  }
-  if (EVENT_RIGHT) {
-    tetris_move((coord){1, 0}, 0);
-  }
-  if (EVENT_DOWN) {
-    frame.piece.soft_drop += 1;
-    tetris_move((coord){0, 1}, 0);
-  }
-  if (EVENT_DROP) {
-    tetris_drop();
-  }
-  if (EVENT_ROTATE_CW) {
-    tetris_move((coord){0, 0}, 1);
-  }
-  if (EVENT_ROTATE_CCW) {
-    tetris_move((coord){0, 0}, -1);
-  }
-  if (EVENT_SWAP) {
-    tetris_swap();
+  // STATE_RUNNING
+
+#define EVENT_TET_LEFT (key_flopped(&_input.left) != 0)
+#define EVENT_TET_RIGHT (key_flopped(&_input.right) != 0)
+#define EVENT_TET_DOWN (key_flopped(&_input.down) != 0)
+#define EVENT_SWAP (key_flopped(&_input.up) == 1)
+#define EVENT_DROP (key_flopped(&_input.l) == 1)
+#define EVENT_ROTATE_CW (key_flopped(&_input.a) == 1)
+#define EVENT_ROTATE_CCW (key_flopped(&_input.b) == 1)
+
+  case STATE_RUNNING:
+    if (EVENT_TET_LEFT  )   tetris_move((coord){-1, 0}, 0);
+    if (EVENT_TET_RIGHT )   tetris_move((coord){1, 0}, 0);
+    if (EVENT_TET_DOWN  ) { tetris_move((coord){0, 1}, 0); frame.piece.soft_drop += 1; }
+    if (EVENT_ROTATE_CW )   tetris_move((coord){0, 0}, 1);
+    if (EVENT_ROTATE_CCW)   tetris_move((coord){0, 0}, -1);
+    if (EVENT_SWAP      )   tetris_swap();
+    if (EVENT_DROP      )   tetris_drop();
+    break;
+
+
+
+  // STATE_PAUSED
+
+#define EVENT_LEFT (key_flopped(&_input.left) == 1)
+#define EVENT_RIGHT (key_flopped(&_input.right) == 1)
+#define EVENT_DOWN (key_flopped(&_input.down) == 1)
+#define EVENT_UP (key_flopped(&_input.up) == 1)
+
+  case STATE_PAUSED:
+    if (EVENT_UP        )   osd_menu_up();
+    if (EVENT_DOWN      )   osd_menu_down();
+    if (EVENT_LEFT      )   osd_menu_left();
+    if (EVENT_RIGHT     )   osd_menu_right();
+    break;
+
+  default: break;
   }
 }

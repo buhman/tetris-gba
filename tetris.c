@@ -4,6 +4,13 @@
 
 #include "tetris.h"
 
+struct frame frame = { 0 };
+struct save _save __attribute__ ((section (".sram")));
+union options options = {
+  .das = 10,
+  .arr = 2,
+};
+
 const coord offsets[7][4][4] = {
   [TET_Z] = {
     {{ 0, 0}, { 1, 0}, { 0, 1}, {-1, 1}},
@@ -133,16 +140,22 @@ static tet next_tet(void)
 void tetris_reset_frame(void)
 {
   if ( _save.magic[0] != 'M' || _save.magic[1] != 'A'
-    || _save.magic[2] != 'G' || _save.magic[3] != '0') {
-    _save.magic[0] = 'M'; _save.magic[1] = 'A';
-    _save.magic[2] = 'G'; _save.magic[3] = '0';
-
+    || _save.magic[2] != 'G' || _save.magic[3] != '1') {
     for (int i = 0; i < 4; i++)
       ((u8*)&_save.best)[i] = 0;
     frame.best = 0;
+
+    _save.options.das = options.das;
+    _save.options.arr = options.arr;
+
+    _save.magic[0] = 'M'; _save.magic[1] = 'A';
+    _save.magic[2] = 'G'; _save.magic[3] = '1';
   } else {
     for (int i = 0; i < 4; i++)
       ((u8*)&frame.best)[i] = ((u8*)&_save.best)[i];
+
+    options.das = _save.options.das;
+    options.arr = _save.options.arr;
   }
 
   clear_field();
@@ -364,8 +377,10 @@ static void _drop(void)
 
   frame.points += points(frame.piece.soft_drop, hard_drop, cleared, frame.combo);
   if (frame.points > frame.best) {
+    _save.magic[0] = 'W'; // corrupt magic
     for (int i = 0; i < 4; i++)
       ((u8*)&_save.best)[i] = ((u8*)&frame.points)[i];
+    _save.magic[0] = 'M'; // un-corrupt magic
   }
   frame.lines.total += cleared;
   next_level(cleared);
@@ -431,4 +446,13 @@ void tetris_swap(void)
     _next_piece(next_tet());
   else
     _next_piece(swap);
+}
+
+
+void tetris_save_options(void)
+{
+  _save.magic[0] = 'W'; // corrupt magic
+  _save.options.arr = options.arr;
+  _save.options.das = options.das;
+  _save.magic[0] = 'M'; // un-corrupt magic
 }
