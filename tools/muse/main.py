@@ -1,3 +1,5 @@
+import sys
+
 from lxml import etree
 
 from score.types import *
@@ -6,7 +8,7 @@ from score import transform
 from score import encode
 
 
-with open('../Untitled-2_unrolled.musicxml', 'rb') as f:
+with open(sys.argv[1], 'rb') as f:
     s = f.read()
 
 
@@ -42,5 +44,5 @@ sequence_size = encode.encode_sequence(mem, flat_sequence)
 
 print(library_size, sequence_size)
 
-with open('music.score', 'wb') as f:
+with open(sys.argv[2], 'wb') as f:
     f.write(memoryview(buf)[:library_size + sequence_size])

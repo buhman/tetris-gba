@@ -40,6 +40,9 @@ make-tools:
 %.glyph.o: %.glyph
 	$(BUILD_BINARY_O)
 
+%.score: %.musicxml | make-tools
+	PYTHONPATH=./tools/muse python ./tools/muse/main.py $< $@
+
 %.score.o: %.score
 	$(BUILD_BINARY_IMAGE_O)
 
