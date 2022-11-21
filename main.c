@@ -11,9 +11,9 @@
 #include "input.h"
 #include "block.h"
 #include "obj_tet.h"
-#include "glyph.h"
 #include "osd.h"
 #include "music.h"
+#include "title.h"
 
 void _user_isr(void)
 {
@@ -22,12 +22,15 @@ void _user_isr(void)
 
   if ((ireq & IE__TIMER_0) != 0) {
     ireq = IE__TIMER_0;
-    music_tick();
+    if (frame.state != STATE_TITLE) music_tick();
   } else if ((ireq & IE__V_BLANK) != 0) {
     ireq = IE__V_BLANK;
     input();
 
     switch (frame.state) {
+    case STATE_TITLE:
+      title_tick();
+      break;
     case STATE_RUNNING:
       tetris_tick();
       render_field();
@@ -49,68 +52,7 @@ void _user_isr(void)
 
 void _start(void)
 {
-  music_init();
-
-  init_palettes();
-
-  fill_32((void*)&vram.character_block[0][tile(0)],
-          nib_32(0),
-          TILE_16_LENGTH);
-
-  fill_32((void*)&vram.character_block[0][tile(1)],
-          nib_32(1),
-          TILE_16_LENGTH);
-
-  block_tile((void*)&vram.character_block[0][tile(2)], 1);
-
-  block_end_tile((void*)&vram.character_block[0][tile(3)], 1);
-
-  obj_tet_init();
-
-  render_static_backgrounds();
-  render_init_queue();
-
-  pram.bg[14][1] = PRAM_RGB15(25, 25, 25);
-  pram.bg[15][1] = PRAM_RGB15(31, 31, 31);
-  glyph_init(1, 0, 0);
-
   transition(STATE_TITLE);
-
-  // OSD text
-  io_reg.BG0CNT =
-    ( BG_CNT__COLOR_16_16
-    | BG_CNT__SCREEN_SIZE(0)
-    | BG_CNT__CHARACTER_BASE_BLOCK(1)
-    | BG_CNT__SCREEN_BASE_BLOCK(31)
-    | BG_CNT__PRIORITY(0)
-    );
-
-  // pause/title background
-  io_reg.BG1CNT =
-    ( BG_CNT__COLOR_16_16
-    | BG_CNT__SCREEN_SIZE(0)
-    | BG_CNT__CHARACTER_BASE_BLOCK(0)
-    | BG_CNT__SCREEN_BASE_BLOCK(30)
-    | BG_CNT__PRIORITY(1)
-    );
-
-  // unused
-  io_reg.BG2CNT =
-    ( BG_CNT__COLOR_16_16
-    | BG_CNT__SCREEN_SIZE(0)
-    | BG_CNT__CHARACTER_BASE_BLOCK(0)
-    | BG_CNT__SCREEN_BASE_BLOCK(29)
-    | BG_CNT__PRIORITY(2)
-    );
-
-  // tetris field and sidebar background
-  io_reg.BG3CNT =
-    ( BG_CNT__COLOR_16_16
-    | BG_CNT__SCREEN_SIZE(0)
-    | BG_CNT__CHARACTER_BASE_BLOCK(0)
-    | BG_CNT__SCREEN_BASE_BLOCK(28)
-    | BG_CNT__PRIORITY(3)
-    );
 
   *(volatile u32 *)(IWRAM_USER_ISR) = (u32)(&_user_isr);
 

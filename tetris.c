@@ -8,7 +8,7 @@ struct frame frame = { 0 };
 struct save _save __attribute__ ((section (".sram")));
 union options options = {
   .das = 10,
-  .arr = 2,
+  .arr = 4,
 };
 
 const coord offsets[7][4][4] = {

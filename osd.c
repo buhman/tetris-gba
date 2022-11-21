@@ -59,14 +59,6 @@ void osd_score_labels(void)
   for (int j = 1; j < SCORE_LABEL_COUNT; j++) {
     _label(&score_labels[0], j, SCORE_LABEL_LEN);
   }
-
-  static u8 ana[] = "ana";
-  for (int j = 0; j < (sizeof ana); j++) {
-    vram.screen_block[31][(32 * 19) + (27+j)] =
-      ( SCREEN_TEXT__COLOR_PALETTE(LABEL_PALETTE)
-      | SCREEN_TEXT__CHARACTER(LABEL_OFFSET + ana[j])
-      );
-  }
 }
 
 struct osd {

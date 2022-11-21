@@ -1,0 +1,25 @@
+//extern unsigned int _binary_res_title_text_data_indexed_start;
+extern unsigned int _binary_res_title_text_data_chunks_start;
+extern unsigned int _binary_res_title_text_data_indexes_start;
+extern unsigned int _binary_res_title_text_data_chunks_size;
+extern unsigned int _binary_res_title_text_data_indexes_size;
+
+
+//extern unsigned int _binary_res_title_front_data_indexed_start;
+extern unsigned int _binary_res_title_front_data_chunks_start;
+extern unsigned int _binary_res_title_front_data_indexes_start;
+extern unsigned int _binary_res_title_front_data_chunks_size;
+extern unsigned int _binary_res_title_front_data_indexes_size;
+
+
+//extern unsigned int _binary_res_title_middle_data_indexed_start;
+extern unsigned int _binary_res_title_middle_data_chunks_start;
+extern unsigned int _binary_res_title_middle_data_indexes_start;
+extern unsigned int _binary_res_title_middle_data_chunks_size;
+extern unsigned int _binary_res_title_middle_data_indexes_size;
+
+//extern unsigned int _binary_res_title_back_data_indexed_start;
+extern unsigned int _binary_res_title_back_data_chunks_start;
+extern unsigned int _binary_res_title_back_data_indexes_start;
+extern unsigned int _binary_res_title_back_data_chunks_size;
+extern unsigned int _binary_res_title_back_data_indexes_size;

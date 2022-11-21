@@ -9,3 +9,6 @@ otb-convert
 *.score
 __pycache__/
 *.pyc
+*.chunks
+*.indexes
+*.indexed

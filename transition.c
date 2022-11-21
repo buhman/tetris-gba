@@ -4,22 +4,31 @@
 #include "tetris.h"
 #include "transition.h"
 #include "osd.h"
+#include "title.h"
+#include "render.h"
+#include "game.h"
 
 typedef void (*transition_t)(void);
 
 static void transition_title(void)
 {
-  osd_clear();
-  osd_title();
+  //osd_clear();
+  //osd_title();
+  title_init();
 
   io_reg.DISPCNT =
     ( DISPCNT__BG0
+    | DISPCNT__BG1
+    | DISPCNT__BG2
+    | DISPCNT__BG3
     | DISPCNT__BG_MODE_0
-    );
+    );  
 }
 
 static void transition_reset(void)
 {
+  game_init();
+  
   tetris_reset_frame();
   transition(STATE_RUNNING);
 }
