@@ -7,19 +7,29 @@
 
 #include "res/title/layers.data.indexed.h"
 
-static u16 palette[] = {
+static u16 palette0[] = {
   //[0] = PRAM_RGB15( 0, 0, 0), ; transparency
-  [1] = PRAM_RGB15(31,31,31), // text outline
-  [2] = PRAM_RGB15(16, 3,12), //
-  [3] = PRAM_RGB15(31,17,25), // text inner
-  [4] = PRAM_RGB15(24, 3,12), //
-  [5] = PRAM_RGB15(24, 9,25), //
+  [1]  = PRAM_RGB15(31,31,31), // text outline highlight
+  [2]  = PRAM_RGB15(16, 3,12), // text outline lowlight
+  [3]  = PRAM_RGB15(31,17,25), // text inner
+  [4]  = PRAM_RGB15(24, 3,12), // checker accent
+  [5]  = PRAM_RGB15(24, 9,25), //
   [15] = PRAM_RGB15(0, 0, 0), // black background
+};
+
+static u16 palette1[] = {
+  //[0] = PRAM_RGB15( 0, 0, 0), ; transparency
+  [1]  = PRAM_RGB15(24,31,31), // text outline highlight
+  [2]  = PRAM_RGB15( 5, 6,25), // text outline lowlight
+  [3]  = PRAM_RGB15(11,26, 6), // text inner
+  [4]  = PRAM_RGB15(31,22, 1), // checker accent
+  [5]  = PRAM_RGB15(31,14, 3), // box
+  [15] = PRAM_RGB15(31,31,31), // black background
 };
 
 static inline void title_palettes(void)
 {
-  copy_16((void*)&pram.bg[0][0], &palette[0], (sizeof palette));
+  copy_16((void*)&pram.bg[0][0], &palette1[0], (sizeof palette1));
 }
 
 struct layer {
