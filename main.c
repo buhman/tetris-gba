@@ -22,7 +22,7 @@ void _user_isr(void)
 
   if ((ireq & IE__TIMER_0) != 0) {
     ireq = IE__TIMER_0;
-    if (frame.state != STATE_TITLE) music_tick();
+    if (frame.state != STATE_TITLE && frame.state != STATE_PAUSED) music_tick();
   } else if ((ireq & IE__V_BLANK) != 0) {
     ireq = IE__V_BLANK;
     input();
@@ -56,7 +56,8 @@ void _start(void)
 
   *(volatile u32 *)(IWRAM_USER_ISR) = (u32)(&_user_isr);
 
-  io_reg.TM0CNT_L = (u16)-3581;
+  //io_reg.TM0CNT_L = (u16)-3581;
+  io_reg.TM0CNT_L = (u16)-15581;
 
   io_reg.TM0CNT_H =
     ( TM_CNT_H__ENABLE

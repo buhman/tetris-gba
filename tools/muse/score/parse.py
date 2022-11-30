@@ -44,9 +44,11 @@ def parse_note(note: etree.Element) -> Note:
         pitch = Rest()
     else:
         pitch = parse_pitch(note.xpath('./pitch')[0])
+        if pitch == Pitch(step=Step.A, alter=Alter.natural, octave=1):
+            raise Exception(pitch)
 
     duration = int(note.xpath('./duration/text()')[0])
-    assert duration in _valid_durations
+    #assert duration in _valid_durations, duration
 
     voice = int(note.xpath('./voice/text()')[0])
 
@@ -54,7 +56,7 @@ def parse_note(note: etree.Element) -> Note:
 
 
 # HACK
-EXPECTED_TOTAL_DURATION = 32
+#EXPECTED_TOTAL_DURATION = 32
 
 def parse_measure(measure: etree.Element) -> list[Note]:
     last_voice = None
@@ -62,16 +64,22 @@ def parse_measure(measure: etree.Element) -> list[Note]:
 
     for child in measure:
         if child.tag == 'note':
-            note = parse_note(child)
+            try:
+                note = parse_note(child)
+            except:
+                print("measure", measure.get("number"))
+                print(etree.tostring(measure).decode('utf-8'))
+                raise
             assert last_voice is None or note.voice == last_voice
             if last_voice is None and total_duration > 0:
                 yield Note(Rest(), total_duration, note.voice)
             last_voice = note.voice
+
             total_duration += note.duration
             yield note
         elif child.tag == 'backup':
             backup_duration = int(child.xpath('./duration/text()')[0])
-            assert total_duration == EXPECTED_TOTAL_DURATION
+            #assert total_duration == EXPECTED_TOTAL_DURATION
             total_duration -= backup_duration
             assert total_duration >= 0
             last_voice = None
@@ -86,9 +94,9 @@ def parse_measure(measure: etree.Element) -> list[Note]:
             pass
 
     # FIXME: hack
-    if total_duration != EXPECTED_TOTAL_DURATION:
-        print(etree.tostring(measure).decode('utf-8'))
-    assert total_duration == EXPECTED_TOTAL_DURATION, (total_duration, measure.get('number'))
+    #if total_duration != EXPECTED_TOTAL_DURATION:
+    #    print(etree.tostring(measure).decode('utf-8'))
+    #assert total_duration == EXPECTED_TOTAL_DURATION, (total_duration, measure.get('number'))
 
 
 def parse_part(part: etree.Element) -> list[Measure]:
@@ -98,7 +106,6 @@ def parse_part(part: etree.Element) -> list[Measure]:
         yield measure
 
 
-def parse_score(root: etree.Element) -> list[Measure]:
-    _part1, = root.xpath('//part')
-    measures = list(parse_part(_part1))
-    return measures
+def parse_score(root: etree.Element) -> list[str, list[Measure]]:
+    for part in root.xpath('//part'):
+        yield part.get("id"), list(parse_part(part))

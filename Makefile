@@ -26,7 +26,8 @@ OBJS += res/block_end.data.o
 OBJS += res/BmPlus_ToshibaSat_8x8.glyph.o
 OBJS += res/Bm437_CompaqThin_8x8.glyph.o
 OBJS += res/Bm437_CL_EagleIII_8x16.glyph.o
-OBJS += res/music.score.o
+OBJS += res/korobeiniki.score.o
+OBJS += res/puzzle.score.o
 
 OBJS += res/title/text.data.chunks.o
 OBJS += res/title/front.data.chunks.o

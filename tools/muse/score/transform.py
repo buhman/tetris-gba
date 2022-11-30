@@ -16,6 +16,20 @@ def measure_collate(measure: Measure) -> list[VoiceMeasure]:
     return list(do())
 
 
+def measure_collate_parts(score: list[tuple[str, list[Measure]]]) -> list[list[VoiceMeasure]]:
+    part_lengths = set(len(measures) for _, measures in score)
+    assert len(part_lengths) == 1, part_lengths
+    part_length = next(iter(part_lengths))
+
+    for measure_ix in range(part_length):
+        yield [
+            VoiceMeasure(
+                voice=part_ix,
+                notes=measures[measure_ix].notes
+            )
+            for part_ix, (part_id, measures) in enumerate(score)
+        ]
+
 def measure_library(voice_measure_list: list[list[VoiceMeasure]]) -> tuple[list[VoiceMeasure, dict[VoiceMeasure, int]]]:
     library = list(set(vm.notes for vms in voice_measure_list for vm in vms))
     def do():
@@ -29,13 +43,11 @@ def max_notes_per_measure(forward: list[VoiceMeasure]) -> int:
     return max(len(notes) for notes in forward)
 
 
-#fixme: hack
-_voices = {
-    1: 0,
-    5: 1,
-    6: 2,
-    2: 2
-}
+def steps_per_measure(forward: list[VoiceMeasure]) -> int:
+    spm = set(sum(note.duration for note in notes) for notes in forward)
+    assert len(spm) == 1, spm
+    return next(iter(spm))
+
 
 LibraryID = int
 VoiceID = int
@@ -46,24 +58,18 @@ def sequence(reverse: dict[tuple[Note], LibraryID],
 
     def do(voice_measures: list[VoiceMeasure]
            ) -> tuple[VoiceID, LibraryID]:
-        voices = set(_voices.keys())
-        voice_ix = 0
+        hw_voices = {0, 1, 2, 3}
 
         for voice_measure in voice_measures:
-            voices.remove(voice_measure.voice)
             library_id = reverse[voice_measure.notes]
-            voice_ix += 1
-            yield voice_measure.voice, library_id
+            yield hw_voices.pop(), library_id
 
-        assert not (voice_ix > 3)
-
-        while voice_ix < 3:
-            voice_ix += 1
-            yield voices.pop(), -1
+        while hw_voices:
+            yield hw_voices.pop(), -1
 
     return [
         list(sorted(
-            do(voice_measures), key=lambda v_i: _voices[v_i[0]]
+            do(voice_measures), key=lambda v_i: v_i[0]
         ))
         for voice_measures in voice_measure_list
     ]
@@ -73,5 +79,5 @@ def flatten_sequence(sequence: list[tuple[VoiceID, LibraryID]]
                      ) -> list[list[LibraryID]]:
     return [
         [voices[ix] for voices in sequence]
-        for ix in range(3)
+        for ix in range(4)
     ]

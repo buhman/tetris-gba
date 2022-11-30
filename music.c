@@ -5,7 +5,7 @@
 #include "music.h"
 #include "res/music.score.h"
 
-static u32 score = (u32)&_binary_res_music_score_start;
+static u32 score = (u32)&_binary_res_puzzle_score_start;
 static u16 notes_per_measure;
 static u16 steps_per_measure;
 static u32 measure_count;
@@ -70,7 +70,7 @@ void music_step(void)
       case 1:
         io_reg.SOUND2_CNT_L =
           ( SOUND2_CNT_L__ENVELOPE_VALUE(frequency == 0 ? 0 : 9)
-          | SOUND2_CNT_L__ENVELOPE_STEPS(1)
+          | SOUND2_CNT_L__ENVELOPE_STEPS(3)
           | SOUND2_CNT_L__DUTY_CYCLE(3)
           );
         io_reg.SOUND2_CNT_H =
@@ -81,11 +81,24 @@ void music_step(void)
       case 2:
         io_reg.SOUND3_CNT_H =
           ( SOUND3_CNT_H__OUTPUT_LEVEL(frequency == 0 ? 0 : 1)
-          | SOUND3_CNT_H__SOUND_LENGTH(1)
+          | SOUND3_CNT_H__SOUND_LENGTH(3)
           );
         io_reg.SOUND3_CNT_X =
           ( SOUND3_CNT_X__FREQUNCY_DATA(frequency)
           | SOUND3_CNT_X__RESTART
+          );
+        break;
+      case 3:
+        io_reg.SOUND4_CNT_L =
+          ( SOUND4_CNT_L__ENVELOPE_VALUE(frequency == 0 ? 0 : 10)
+          | SOUND4_CNT_L__ENVELOPE_STEPS(1)
+          | SOUND4_CNT_L__SOUND_LENGTH(30)
+          );
+
+        io_reg.SOUND4_CNT_H =
+          ( SOUND4_CNT_H__RESTART
+          | SOUND4_CNT_H__COUNTER_SHIFT_FREQ(1)
+          | SOUND4_CNT_H__COUNTER_PRESCALAR(4)
           );
         break;
       }
@@ -136,7 +149,7 @@ void music_score_init(void)
   sequence_length = s->sequence_length;
   _voices = (void*)((u32)s + 4);
 
-  state.measure = 40;
+  state.measure = 0;
 }
 
 void music_init(void)

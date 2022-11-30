@@ -1,3 +1,7 @@
-extern unsigned int _binary_res_music_score_start;
-extern unsigned int _binary_res_music_score_end;
-extern unsigned int _binary_res_music_score_size;
+extern unsigned int _binary_res_korobeiniki_score_start;
+extern unsigned int _binary_res_korobeiniki_score_end;
+extern unsigned int _binary_res_korobeiniki_score_size;
+
+extern unsigned int _binary_res_puzzle_score_start;
+extern unsigned int _binary_res_puzzle_score_end;
+extern unsigned int _binary_res_puzzle_score_size;

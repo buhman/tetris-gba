@@ -12,8 +12,6 @@ typedef void (*transition_t)(void);
 
 static void transition_title(void)
 {
-  //osd_clear();
-  //osd_title();
   title_init();
 
   io_reg.DISPCNT =
@@ -22,13 +20,15 @@ static void transition_title(void)
     | DISPCNT__BG2
     | DISPCNT__BG3
     | DISPCNT__BG_MODE_0
-    );  
+    );
 }
 
 static void transition_reset(void)
 {
+  io_reg.DISPCNT = 0;
+
   game_init();
-  
+
   tetris_reset_frame();
   transition(STATE_RUNNING);
 }
