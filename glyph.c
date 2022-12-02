@@ -38,7 +38,7 @@ static inline u32 glyph_init_8x8(u32 fg_color, u32 bg_color, u32 font, u32 offse
 
     block[index++] = row_out;
   }
-  return fonts[0].size * 4;
+  return fonts[font].size * 4;
 }
 
 u32 glyph_init(u32 fg_color, u32 bg_color, u32 offset)
