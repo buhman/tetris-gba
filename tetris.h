@@ -1,6 +1,6 @@
 #pragma once
 
-#include <assert.h>
+#define static_assert _Static_assert
 
 #include "type.h"
 #include "base.h"
